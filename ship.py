@@ -1,41 +1,25 @@
+class GeneralShipDescriptor:
+    def __set_name__(self, owner, name):
+        self.protected_name = "_" + name
+
+    def __get__(self, instance, owner):
+        return getattr(instance, self.protected_name)
+
+    def __set__(self, instance, value):
+        setattr(instance, self.protected_name, value)
+
+
 class Ship:
+    point = GeneralShipDescriptor()
+    size = GeneralShipDescriptor()
+    hp = GeneralShipDescriptor()
+    orientation = GeneralShipDescriptor()
+
     def __init__(self, point: tuple, size: int, orientation: bool) -> None:
         self.point = point
         self.size = size
         self.hp = size
         self.orientation = orientation
-
-    @property
-    def hp(self):
-        return self._hp
-
-    @hp.setter
-    def hp(self, value):
-        self._hp = value
-
-    @property
-    def orientation(self):
-        return self._orientation
-
-    @orientation.setter
-    def orientation(self, value):
-        self._orientation = value
-
-    @property
-    def size(self):
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        self._size = value
-
-    @property
-    def point(self):
-        return self._point
-
-    @point.setter
-    def point(self, value):
-        self._point = value
 
     @property
     def x(self):
