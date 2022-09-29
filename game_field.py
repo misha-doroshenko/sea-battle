@@ -1,12 +1,12 @@
 import random
+from ship import Ship
 
 
 class GameField:
     FIELD_SIZE = 10
 
     def __init__(self) -> None:
-        self._field = [["[ ]" for _ in range(GameField.FIELD_SIZE + 2)] for _ in range(GameField.FIELD_SIZE + 2)]
-        self._field_check = [["[ ]" for _ in range(GameField.FIELD_SIZE + 2)] for _ in range(GameField.FIELD_SIZE + 2)]
+        self._field: list[list[str | Ship]] = [["[ ]" for _ in range(GameField.FIELD_SIZE + 2)] for _ in range(GameField.FIELD_SIZE + 2)]
 
     def print_field(self) -> None:
         print("    A  B  C  D  E  F  G  H  I  J")
@@ -16,20 +16,41 @@ class GameField:
             else:
                 print(i, end=" ")
             for j in range(1, GameField.FIELD_SIZE + 1):
-                print(self._field[i][j], end="")
+                if isinstance(self._field[i][j], Ship):
+                    print(" ▢ ", end="")
+                else:
+                    print("[ ]", end="")
             print()
 
-    def print_field_check(self) -> None:
-        for i in range(0, GameField.FIELD_SIZE + 2):
-            for j in range(0, GameField.FIELD_SIZE + 2):
-                print(self._field_check[i][j], end="")
-            print()
+    def set_ship_on_field(self, ship: Ship) -> None:
+        if ship.orientation:
+            self._field[ship.y][ship.x - 1] = "[•]"
+            self._field[ship.y][ship.x + ship.size] = "[•]"
 
-    def create_ship(self, ship_size: int, orientation: bool) -> None:
+            for i in range(ship.x - 1, ship.x + ship.size + 1):
+                self._field[ship.y - 1][i] = "[•]"
+                self._field[ship.y + 1][i] = "[•]"
+
+            for i in range(ship.x, ship.x + ship.size):
+                self._field[ship.y][i] = ship
+
+        else:
+            self._field[ship.y - 1][ship.x] = "[•]"
+            self._field[ship.y + ship.size][ship.x] = "[•]"
+
+            for i in range(ship.y - 1, ship.y + ship.size + 1):
+                self._field[i][ship.x - 1] = "[•]"
+                self._field[i][ship.x + 1] = "[•]"
+
+            for i in range(ship.y, ship.y + ship.size):
+                self._field[i][ship.x] = ship
+
+    def get_random_ship_args(self, ship_size: int) -> tuple:
         """
         orientation: True - horizontal
                      False - vertical
         """
+        orientation = random.choice([True, False])
         if orientation:
             while True:
                 start_position_x = random.randint(1, GameField.FIELD_SIZE - ship_size + 1)
@@ -37,18 +58,6 @@ class GameField:
                 fit_check = self.check_fit_horizontal(start_position_x, start_position_y, ship_size)
                 if fit_check is True:
                     break
-
-            self._field_check[start_position_y][start_position_x - 1] = "[*]"
-            self._field_check[start_position_y][start_position_x + ship_size] = "[*]"
-
-            for i in range(start_position_x - 1, start_position_x + ship_size + 1):
-                self._field_check[start_position_y - 1][i] = "[*]"
-                self._field_check[start_position_y + 1][i] = "[*]"
-
-            for i in range(start_position_x, start_position_x + ship_size):
-                self._field_check[start_position_y][i] = " # "
-                self._field[start_position_y][i] = " # "
-
         else:
             while True:
                 start_position_x = random.randint(1, GameField.FIELD_SIZE)
@@ -57,22 +66,13 @@ class GameField:
                 if fit_check is True:
                     break
 
-            self._field_check[start_position_y - 1][start_position_x] = "[*]"
-            self._field_check[start_position_y + ship_size][start_position_x] = "[*]"
-
-            for i in range(start_position_y - 1, start_position_y + ship_size + 1):
-                self._field_check[i][start_position_x - 1] = "[*]"
-                self._field_check[i][start_position_x + 1] = "[*]"
-
-            for i in range(start_position_y, start_position_y + ship_size):
-                self._field_check[i][start_position_x] = " # "
-                self._field[i][start_position_x] = " # "
+        return (start_position_x, start_position_y), ship_size, orientation
 
     def check_fit_horizontal(self, x: int, y: int, ship_size: int) -> bool:
         checks = []
 
         for i in range(x, x + ship_size):
-            if self._field_check[y][i] == "[ ]":
+            if self._field[y][i] == "[ ]":
                 checks.append(True)
             else:
                 checks.append(False)
@@ -83,7 +83,7 @@ class GameField:
         checks = []
 
         for i in range(y, y + ship_size):
-            if self._field_check[i][x] == "[ ]":
+            if self._field[i][x] == "[ ]":
                 checks.append(True)
             else:
                 checks.append(False)
@@ -91,20 +91,17 @@ class GameField:
         return all(checks)
 
     def fill_field_rand(self):
+        self.set_ship_on_field(Ship(*self.get_random_ship_args(4)))         # setting one 4-decked ship
 
-        self.create_ship(4, False)
+        for _ in range(2):
+            self.set_ship_on_field(Ship(*self.get_random_ship_args(3)))     # setting two 3-decked ships
 
-        self.create_ship(3, True)
-        self.create_ship(3, False)
+        for _ in range(3):
+            self.set_ship_on_field(Ship(*self.get_random_ship_args(2)))     # setting 3 2-decked ships
 
-        self.create_ship(2, True)
-        self.create_ship(2, True)
-        self.create_ship(2, True)
+        for _ in range(4):
+            self.set_ship_on_field(Ship(*self.get_random_ship_args(1)))     # setting 4 single-decked ships
 
-        self.create_ship(1, True)
-        self.create_ship(1, True)
-        self.create_ship(1, True)
-        self.create_ship(1, True)
 
 gf = GameField()
 gf.fill_field_rand()
